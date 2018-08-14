@@ -61,6 +61,7 @@ configure: deps luajit
 		--with-stream \
 		--add-module=$(ROOTDIR)/deps/stream-lua-nginx-module-$(V_STREAM_LUA_NGX_MODULE) \
 		--add-module=$(ROOTDIR)/deps/lua-nginx-module-$(V_NGX_LUA_MODULE) \
+		--add-module=$(ROOTDIR)/deps/lua-upstream-nginx-module-$(V_LUA_UPSTREAM_NGINX_MODULE) \
 		--prefix=$(PREFIX)/nginx
 	@echo "==== Successfully configure Nginx $(V_NGINX) ===="
 

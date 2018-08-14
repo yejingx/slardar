@@ -59,6 +59,28 @@ end
 -- get server in the init_by_lua* context for the lua-resty-checkups Lua Library
 function _M.init(config)
     local store_config = config.store or {}
+
+    -- read upstream from local config file
+    if store_config.type == "local" then
+        local cluster, ok = api.get_local_upstream()
+        if not ok then
+            return false
+        end
+        for skey, value in pairs(cluster) do repeat
+            -- upstream already exists in config.lua
+            if config[skey] then
+                break
+            end
+
+            config[skey] = {
+                cluster = {
+                    { servers = value },
+                }
+            }
+        until true end
+        return true
+    end
+
     local key_prefix = store_config.config_key_prefix or ""
     local store_cluster = store_config.cluster or {}
     local upstreams_prefix = "upstreams/"

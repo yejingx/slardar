@@ -3,18 +3,22 @@ local http         = require "socket.http"
 local cjson        = require "cjson.safe"
 local httpipe      = require "resty.httpipe"
 local checkups     = require "resty.checkups.api"
+local utils        = require "resty.store.utils"
 
 local pairs         = pairs
 local ipairs        = ipairs
 local type          = type
 local str_format    = string.format
 local str_match     = string.match
+local tab_insert    = table.insert
 local decode_base64 = ngx.decode_base64
 local log           = ngx.log
 local ERR           = ngx.ERR
 local INFO          = ngx.INFO
 
 local _M = { _VERSION = '0.01' }
+
+local ngx_upstream
 
 local valid_store = {
     etcd = {
@@ -236,5 +240,42 @@ function _M.get(key, opts)
         return get_store(uri, opts)
     end
 end
+
+
+function _M.get_local_upstream()
+    if not ngx_upstream then
+        local ok
+        ok, ngx_upstream = pcall(require, "ngx.upstream")
+        if not ok then
+            log(ERR, "ngx_upstream_lua module required")
+            return nil, false
+        end
+    end
+
+    local cluster = {}
+    local names = ngx_upstream.get_upstreams()
+    for _, name in ipairs(names) do
+        local servers = {}
+        local srvs = ngx_upstream.get_primary_peers(name)
+        for _, srv in ipairs(srvs) do
+            local host, port = utils.extract_srv_host_port(srv.name)
+            if not host then
+                log(ERR, "invalid server name: ", srv.name)
+                return nil, false
+            end
+            tab_insert(servers, {
+                host = host,
+                port = port,
+                weight = srv.weight,
+                max_fails = srv.max_fails,
+                fail_timeout = srv.fail_timeout,
+            })
+        end
+        cluster[name] = servers
+    end
+
+    return cluster, true
+end
+
 
 return _M

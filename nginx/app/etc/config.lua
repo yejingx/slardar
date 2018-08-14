@@ -31,7 +31,7 @@ _M.global = {
 
 _M.store = {
     -- key-value store type
-    type = "etcd",
+    type = "local",
 
     -- connect to key-value store will timeout in 5s.
     timeout = 5,

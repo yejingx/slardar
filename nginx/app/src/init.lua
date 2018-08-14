@@ -59,12 +59,14 @@ if no_store ~= true then
     end
 end
 
-local ok, init_ok = pcall(mload.init, slardar)
-if no_store ~= true then
-    if not ok then
-        error("Init lua script failed, " .. init_ok .. ", aborting !!!!")
-    elseif not init_ok then
-        error("Init lua script failed, aborting !!!!")
+if slardar.store.type ~= "local" then
+    local ok, init_ok = pcall(mload.init, slardar)
+    if no_store ~= true then
+        if not ok then
+            error("Init lua script failed, " .. init_ok .. ", aborting !!!!")
+        elseif not init_ok then
+            error("Init lua script failed, aborting !!!!")
+        end
     end
 end
 
